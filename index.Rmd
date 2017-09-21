@@ -6,13 +6,11 @@ output: html_document
 ---
 
 #Website for 3530
+
 ## Hello, my name is Kelly Loucks. I am a senior mathematics major with a concentration in statistics. 
 
 
+```{r, echo=FALSE}
+knitr::include_graphics("./me.jpg")
 
-
-## Including Plots
-
-You can also embed plots, for example:
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```

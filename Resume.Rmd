@@ -1,0 +1,11 @@
+---
+title: "Resume"
+author: "Kelly Loucks"
+date: "September 21, 2017"
+output: html_document
+---
+
+```{r, echo=FALSE}
+knitr::include_graphics("./resume.jpg")
+
+```

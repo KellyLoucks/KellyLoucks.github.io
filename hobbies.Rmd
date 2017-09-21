@@ -1,0 +1,20 @@
+---
+title: "hobbies"
+author: "Kelly Loucks"
+date: "9/12/2017"
+output: html_document
+---
+
+##Hiking, rock climbing, and adventuring!!
+
+```{r, echo=FALSE}
+knitr::include_graphics("./gorge.jpg")
+knitr::include_graphics("./rock.jpg")
+```
+
+##My favorite adventuring partner:
+
+```{r, echo=FALSE}
+knitr::include_graphics("./reagan.jpg")
+knitr::include_graphics("./reagan2.jpg")
+```

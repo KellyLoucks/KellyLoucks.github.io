@@ -1,0 +1,12 @@
+---
+title: "research"
+author: "Kelly Loucks"
+date: "9/12/2017"
+output: html_document
+---
+
+##research work posted here
+```{r, echo=FALSE}
+knitr::include_graphics("./ConfPoster.jpg")
+
+```
