@@ -14,7 +14,5 @@ navbar:
     - text: "Bicycle Project"
       href: "CopyOfBicycle.Analysis.html"
   right:
-    - text: "Kelly Loucks"
-      href: https://github.com/KellyLoucks/KellyLoucks.github.io
     - icon: fa-github fa-lg
-      href: https://github.com/KellyLoucks  
+      href: https://github.com/KellyLoucks/KellyLoucks.github.io
