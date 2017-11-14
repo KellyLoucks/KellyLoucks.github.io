@@ -2,7 +2,7 @@
 title: "Bicycle.Analysis"
 author: "Kelly Loucks, Sam Giardina, Tucker Southern"
 date: "9/19/2017"
-output: html_document
+output: bookdown::html_document2
 ---
 
 
@@ -32,7 +32,8 @@ library(caret)
 
 ```
 
-#Importing Datall of the data can be downloaded from Kaggle. This project contains 3 data sets and I’ll import and inspect each data file independently.
+##Importing Dat
+all of the data can be downloaded from Kaggle. This project contains 3 data sets and I’ll import and inspect each data file independently.
 
 ```{r}
 station <- read.csv(file = "station.csv", header = TRUE, 
@@ -300,6 +301,7 @@ Trip_Duration_Month <- start_date_ym %>% mutate(trip_duration_min = tripduration
                                            ifelse(ym  %in% c("2014/12", "2015/1", "2015/2"), "Winter",
                                            ifelse(ym %in% c("2015/3", "2015/4", "2015/5"), "Spring", "Summer"))))
 ```
+
 Now to plot the average trip duration (in minutes) (plus or minus standard error), with colors indicating season.
 
 ```{r, fig.align='center'}
@@ -310,20 +312,30 @@ ggplot(Trip_Duration_Month, aes(x = ym, y = Avg, col= Season)) +
   theme_bw()+
   labs(x = "Date", y = "Duration of Average Trip (minutes)") 
 ```
-There’s surprisingly not a huge range in trip durations here.
 
+There’s surprisingly not a huge range in trip durations here.
 
 The little bit of variation here makes logical sense. Longer trips were being taken in the spring and summer months rather than the fall and winter. It’s also notable that the spring and summer of 2016 may have shown fewer trips than the previous year, show a slight increase in average trip length.
 
-#Number of trips by day of week
+### Number of trips by day of week
+
+I wonder if people are using this service to commute to/from work. Let’s look at the number of trips by day of the week.
+
+First, let’s create a Day of the Week variable.
+
 ```{r}
 trip_2$wd <- wday(trip_2$start_date, label = TRUE)
 ```
 
+Now to plot the total number of trips by day of the week.
+
+
+
+Ok, so there are definitely more trips during the week than on the weekends. I wonder if this varies by season too.
+
 ```{r}
 start_date_ym$wd <- wday(start_date_ym$start_date, label = TRUE)
 ```
-
 ```{r}
 start_date_ym %>%
   group_by(Season, wd) %>%
@@ -331,38 +343,46 @@ start_date_ym %>%
   ggplot(aes(x = wd, y = N, col = Season, fill=Season, group=Season)) +
   geom_point() +
   geom_line() +
-  theme_bw()+
+  theme_bw() +
   labs(x = "Day of the Week", y = "Number of Trips")
-
-
 ```
+
 So it looks like usage is relatively consistent across seasons, at least as far as the number of trips are concerned.
-##Number of Trips by Time of Day
+
+### Number of Trips by Time of Day
+
 How about time of day? Are people using these around commuting times during the week and later on weekends?
 
 ```{r}
-
-
 start_date_ym %>%
   group_by(Season, wd, starttime) %>%
   summarize(N = n()) %>%
   ggplot(aes(x = starttime, y = N, col = Season, fill=Season, group=Season)) +
-  geom_point() +
   geom_line() +
-  theme_bw()+
-  labs(x = "Hour of Day", y = "Number of Trips")+
+  theme_bw() +
+  labs(x = "Hour of Day", y = "Number of Trips") +
   facet_wrap(~ wd, ncol = 2)
-
-
 ```
 
+```{r}
+start_date_ym %>%
+  group_by(wd, Season) %>%
+  summarize(N = n()) %>%
+  ggplot(aes(x=starttime, y=N, col=Season, group=Season)) +
+  geom_line() +
+  theme_bw() +
+  labs(x="Hour of Day", y="Number of Trips") +
+  facet_wrap(~ wd, ncol = 2)
+```
 
+Wow, looks like regardless of the season, people are commuting to/from work using this service (there’s a spike between 8 and 10 AM and another between 4 and 7 PM Monday through Friday). But the weekends seem to be popular between 10 AM and 10 PM.
 
+### Number of Trips by Member Type
 
-#Member Demographics
-We only seem to have age and gender information about people who have an annual Pronto! membership, so we can at least take a look at what types of people use this service.
+I wonder if different types of members (those who have a membership vs. those that bought a 24 hour or 3 day pass) vary in the number of trips they take.
 
-Let’s look first at age.
+If I were to guess, I’d think the short-term passes would be ideal for tourists or people looking for a quick weekend trip, whereas members may be more likely to continue using the service year-round. Let’s check out my assumptions by plotting, once again colored by season.
+
 ```{r}
 trip_2$usertype <- as.factor(trip_2$usertype)
 trip_age <- trip_2 %>% mutate(age = year(start_dt) - birthyear)
@@ -371,12 +391,42 @@ hist(trip_age$age, main = "Member Age", xlab = "Number of Riders",
     col = "#56B4E9", breaks = 25)
 ```
 
+Surprisingly (to me, at least), different types of users seem to follow similar patterns of usage. Spring and Summer are definitely the most popular times for anyone to ride a bike in the Seattle area.
 
+### Trip Duration by Member Type
 
+While it may seem that the trip duration shouldn’t vary widely by member type, a quick look at Pronto!’s pricing structure may make you reconsider that assumption. You see, while you have to purchase either an annual membership ($85/year), a 24-Hour Pass ($8) or a 3-Day Pass ($16) there is still a cap on the duration of your trip. For members, any ride under 45 minutes is free, but any ride going over 45 minutes will incur a fee of $2 for every additional 30 minutes. For short-term users, any ride under 30 minutes is free, but going over that time limit would cost you an additional $2 for the first 30 minutes and $5 for each additional 30 minutes after that!
 
+Let’s see if these time limits cause differing behaviors in our users.
 
+GRAPH
 
-#Trip Routes
+Ok, so our members are pretty good about making sure that they return their bike before they incur extra charges, but the short-term pass holders frequently go over their time limit. I wonder how the cost of a trip varies for members and pass holders. Let’s try to calculate the cost of a trip.
+
+That was a complicated nested if/else statement! Let’s see how much these folks are paying in additional fees!
+
+GRAPH
+
+Looks like short-term pass holders (who are already paying a higher price per day of biking), are also paying lots of extra fees. This could be because they are unfamiliar with the pricing structure and don’t realize they need to return their bike to a station within 30 minutes without getting charged. It is also possible that short-term users may be tourists who don’t know their way around as easily, and thus can’t find their way to a station within the time limit.
+
+### Member Demographics
+
+We only seem to have age and gender information about people who have an annual Pronto! membership, so we can at least take a look at what types of people use this service.
+
+Let’s look first at age.
+
+GRAPH
+
+My first instinct here is to say “Wow! There’s a lot of 20 and 30-somethings that use this service!” But this figure (and these data) may be a little misleading. You see, we don’t have any sort of Rider ID number, meaning we can’t take “individual activity level” into account. So we can’t tell if the tallest spike is because 5 very athletic 28-year-olds went on 4,000 trips each, or if 100 people went on 200 trips each, or if there were 20,000 28-year-olds who each only used the service once.
+
+The same problem would arise if we looked at gender, so I’m just going to move beyond demographics.
+
+### Trip Routes
+
+I’m going to do my best to look at some potential routes that these users could have taken, given their start and stop locations and duration. All of these data will be analyzed using the ggmap package and Google Maps API (more info here)
+
+To start, I need to combine the coordinates of the station (from the station dataset) with the data from the trip dataset. Let’s get started.
+
 ```{r}
 # Create a dataframe with only station ID, latitude, and
 # longitude
@@ -403,15 +453,82 @@ trip_route$stop_long <- station_coord[match(trip_route$to_station_id,
 
 ```
 
+Great! Now to start looking at routes.
 
-#Exploring the weather data set
+I’ll start by looking at the possible routes of the very first trip.
+
+
+
+Cool! So Google Maps API was able to give us two potential routes for this particular trip. We can make a best guess on which trip was taken by determining the trip duration.
+
 ```{r}
-glimpse(weather)
-
 
 ```
 
-#Great, let’s change the Date variable to a POSIXct object, and make the “Events” variable factors.
+Ok, so the actual trip on October 13, 2014 took 16.4 minutes. Let’s see how long each of the hypothetical trips took.
+
+```{r}
+
+```
+
+Hmm, looks like Google estimates those trips should have only taken between 5 and 6 minutes. It is very possible that our user did not go directly from one station to the other. It’s also possible that he got stopped at a few red lights along his route.
+
+Perhaps this, being the first trip, was a demo of some sort. Let’s check out the last trip that was recorded and see if we still run into the same time disconnect.
+
+```{r}
+
+```
+
+Well this was certainly a longer ride than the first one we looked at!
+
+How long did this trip take?
+
+```{r}
+
+```
+
+Ok, so how long did Google estimate it should take?
+
+```{r}
+
+```
+
+Once again, the trip took quite a bit longer than any of the routes shown here. It’s possible that estimating the routes taken by cyclists is not the best use of this dataset. So, what else is there to look at?
+
+### Station by Trip Departure and Arrival
+
+I suppose we can see which stations have the most trip departures and which have the most arrivals. Unless people are always making round-trip journeys, these are not likely to be equal.
+
+### Station Usage
+#### Trip Departure
+
+GRAPH
+
+Great, so it looks like the station that sends the highest number of bikes out and takes the highest number of bikes in is located at Pier 69 / Alaskan Way & Clay Street. Looks like this is pretty close to a few parks and several big tourist attractions.
+
+Also, if you flip between “Departures” and “Arrivals”, you’ll notice that quite a few bikes are picked up in the Capitol Hill area, but are returned down by the coast. If you’re unfamiliar with Seattle’s topography, Capitol Hill is aptly named because it’s situated on a very steep hill. It makes sense that people would borrow bikes to ride down the hill, but not want to borrow a bike to go back up the hill. Interesting!
+
+#### Trip Arrival
+
+GRAPH
+
+Great, so it looks like the station that sends the highest number of bikes out and takes the highest number of bikes in is located at Pier 69 / Alaskan Way & Clay Street. Looks like this is pretty close to a few parks and several big tourist attractions.
+
+Also, if you flip between “Departures” and “Arrivals”, you’ll notice that quite a few bikes are picked up in the Capitol Hill area, but are returned down by the coast. If you’re unfamiliar with Seattle’s topography, Capitol Hill is aptly named because it’s situated on a very steep hill. It makes sense that people would borrow bikes to ride down the hill, but not want to borrow a bike to go back up the hill. Interesting!
+
+# Exploring the weather data set
+
+Now that I’ve visualized all that I can think of in terms of the “trips” dataset, it’s time to take a brief look at the weather dataset.
+
+Let’s get a quick reminder of what we’re looking at here.
+
+```{r}
+glimpse(weather)
+
+```
+
+Great, let’s change the Date variable to a POSIXct object, and make the “Events” variable factors.
+
 ```{r}
 # Adjusting the Date Variable
 weather$Date <- mdy(weather$Date)
@@ -419,15 +536,18 @@ weather$Date <- mdy(weather$Date)
 # Adjusting the Events Variable
 weather$Events <- as.factor(weather$Events)
 
-
 ```
-#Great. Now how many weather events are there?
+
+Great. Now how many weather events are there?
+
 ```{r}
 levels(weather$Events)
 
 ```
-#wow, so many combinations of rain!
-#let's combine a few things that seem to represent the same event 
+
+Wow! So mostly combinations of rain…
+
+Let’s combine a few of these things that seem to represent the same event.
 
 ```{r}
 weather$Events <- gsub("Fog , Rain|Fog-Rain", "Fog-Rain", weather$Events)
@@ -440,10 +560,13 @@ weather$Events <- as.factor(weather$Events)
 
 
 ```
-#look for missing values
+
+Where else does this dataset need to be cleaned up? Let’s look for any missing values.
+
 ```{r}
 summary(weather)
 ```
+
 Ok, so we have one NA for “Mean_Temperature_F”, “Max_Gust_Speed_MPH” seems to be represented as a character vector because it has “-” representing NA values, and we have 361 unlabelled Events.
 
 Max Gust Speed should be the easiest one to fix, so we’ll start there.
@@ -457,12 +580,13 @@ weather$Max_Gust_Speed_MPH <- as.numeric(weather$Max_Gust_Speed_MPH)
 
 Great! We changed any absent values for Maximum Gust Speed to 0 MPH and changed the variable type to a number. Uh oh, looks like there are still 185 NA values for Max Gust Speed. That’s a lot to try to replace. I would normally suggest generating a model that could try to predict those values based on other known values, but for now, we’ll just leave it alone.
 
-Since there is only one missing Mean Temperature, it seems the easiest way to fill in the hole is to look up what the average temperature was that day. Note: I certainly would not recommend this if it were any more than one missing value
+Since there is only one missing Mean Temperature, it seems the easiest way to fill in the hole is to look up what the average temperature was that day. _Note: I certainly would not recommend this if it were any more than one missing value_.
 
 ```{r}
 weather[which(is.na(weather$Mean_Temperature_F)), 1]
 
 ```
+
 Ok, so we’re looking for the Mean Temperature on February 14, 2016 in the zipcode 98101 (according to dataset documentation). Looks like the mean temperature that day was 50 degrees F.
 
 Time to substitute in that value.
@@ -474,7 +598,6 @@ weather[490, "Mean_Temperature_F"] <- "50"
 
 Perfect. Now what to do with the unlabelled “Event” categories. The dataset “ReadMe” file from Pronto! doesn’t include any information about this weather dataset. The only thing I can think to do is refer to the Event as “Other”.
 
-
 ```{r}
 weather$Events <- gsub("^$", "Other", weather$Events)
 weather$Events <- as.factor(weather$Events)
@@ -482,23 +605,32 @@ weather$Events <- as.factor(weather$Events)
 ```
 
 Ok, we’re in good shape. Now to do a few quick visualizations.
-##Temperature
-Minimum
+
+### Temperature
+
+#### Minimum
+
 ```{r}
 
 
 ```
-Mean
+
+#### Mean
+
 ```{r}
 
 
 ```
-Maximum
+
+#### Maximum
+
 ```{r}
 
 
 ```
-Events
+
+### Events
+
 ```{r}
 
 ```
