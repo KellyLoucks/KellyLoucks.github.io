@@ -12,7 +12,7 @@ navbar:
     - text: "Resume"
       href: "Resume.html"
     - text: "Bicycle Project"
-      href: "CopyOfBicycle.Analysis.html"
+      href: "Projects/CopyOfBicycle.Analysis.html"
   right:
     - icon: fa-github fa-lg
       href: https://github.com/KellyLoucks/KellyLoucks.github.io
