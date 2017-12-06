@@ -1,6 +1,6 @@
 ---
-title: "Bicycle.Analysis"
-author: "Kelly Loucks, Sam Giardina, Tucker Southern"
+title: "Bicycle Analysis"
+author: " Sam Giardina, Kelly Loucks, Tucker Southern"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: bookdown::html_document2
 ---
@@ -13,6 +13,12 @@ This is an exploration of bicycle-sharing data in the city of Seattle, WA (USA) 
 Time to get started!
 
 #Loading Necessary Packages
+```{r global_options, include=FALSE}
+rm(list=ls()) ### To clear namespace
+library(knitr)
+opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+               echo=TRUE, warning=FALSE, message=FALSE, comment=NA, fig.align = 'center')
+```
 
 ```{r, echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
 # For data manipulation and tidying
@@ -32,7 +38,7 @@ library(caret)
 
 ```
 
-##Importing Dat
+##Importing Data
 all of the data can be downloaded from Kaggle. This project contains 3 data sets and I’ll import and inspect each data file independently.
 
 ```{r}
@@ -465,105 +471,9 @@ My first instinct here is to say “Wow! There’s a lot of 20 and 30-somethings
 
 The same problem would arise if we looked at gender, so I’m just going to move beyond demographics.
 
-### Trip Routes
-
-I’m going to do my best to look at some potential routes that these users could have taken, given their start and stop locations and duration. All of these data will be analyzed using the ggmap package and Google Maps API (more info here)
-
-To start, I need to combine the coordinates of the station (from the station dataset) with the data from the trip dataset. Let’s get started.
-
-```{r}
-# Create a dataframe with only station ID, latitude, and
-# longitude
-station_coord <- station %>% select(station_id, lat, long)
-
-# Trim our trip dataframe to only include start & stop
-# dates/times, and station ID
-trip_route <- trip_2 %>% select(trip_id, starts_with("start_"), 
-    starts_with("stop_"), from_station_id, to_station_id, tripduration)
-
-# Match by station ID
-trip_route$start_lat <- station_coord[match(trip_route$from_station_id, 
-    station_coord$station_id), "lat"]
-
-trip_route$start_long <- station_coord[match(trip_route$from_station_id, 
-    station_coord$station_id), "long"]
-
-trip_route$stop_lat <- station_coord[match(trip_route$to_station_id, 
-    station_coord$station_id), "lat"]
-
-trip_route$stop_long <- station_coord[match(trip_route$to_station_id, 
-    station_coord$station_id), "long"]
+### Skip Trip Routes
 
 
-```
-
-Great! Now to start looking at routes.
-
-I’ll start by looking at the possible routes of the very first trip.
-
-
-
-Cool! So Google Maps API was able to give us two potential routes for this particular trip. We can make a best guess on which trip was taken by determining the trip duration.
-
-```{r}
-
-```
-
-Ok, so the actual trip on October 13, 2014 took 16.4 minutes. Let’s see how long each of the hypothetical trips took.
-
-```{r}
-
-```
-
-Hmm, looks like Google estimates those trips should have only taken between 5 and 6 minutes. It is very possible that our user did not go directly from one station to the other. It’s also possible that he got stopped at a few red lights along his route.
-
-Perhaps this, being the first trip, was a demo of some sort. Let’s check out the last trip that was recorded and see if we still run into the same time disconnect.
-
-```{r}
-
-```
-
-Well this was certainly a longer ride than the first one we looked at!
-
-How long did this trip take?
-
-```{r}
-
-```
-
-Ok, so how long did Google estimate it should take?
-
-```{r}
-
-```
-
-Once again, the trip took quite a bit longer than any of the routes shown here. It’s possible that estimating the routes taken by cyclists is not the best use of this dataset. So, what else is there to look at?
-
-### Station by Trip Departure and Arrival
-
-I suppose we can see which stations have the most trip departures and which have the most arrivals. Unless people are always making round-trip journeys, these are not likely to be equal.
-
-### Station Usage
-#### Trip Departure
-
-```{r}
-
-```
-
-Great, so it looks like the station that sends the highest number of bikes out and takes the highest number of bikes in is located at Pier 69 / Alaskan Way & Clay Street. Looks like this is pretty close to a few parks and several big tourist attractions.
-
-Also, if you flip between “Departures” and “Arrivals”, you’ll notice that quite a few bikes are picked up in the Capitol Hill area, but are returned down by the coast. If you’re unfamiliar with Seattle’s topography, Capitol Hill is aptly named because it’s situated on a very steep hill. It makes sense that people would borrow bikes to ride down the hill, but not want to borrow a bike to go back up the hill. Interesting!
-
-#### Trip Arrival
-
-GRAPH
-```{r}
-
-```
-
-Great, so it looks like the station that sends the highest number of bikes out and takes the highest number of bikes in is located at Pier 69 / Alaskan Way & Clay Street. Looks like this is pretty close to a few parks and several big tourist attractions.
-
-Also, if you flip between “Departures” and “Arrivals”, you’ll notice that quite a few bikes are picked up in the Capitol Hill area, but are returned down by the coast. If you’re unfamiliar with Seattle’s topography, Capitol Hill is aptly named because it’s situated on a very steep hill. It makes sense that people would borrow bikes to ride down the hill, but not want to borrow a bike to go back up the hill. Interesting!
 
 # Exploring the weather data set
 
@@ -584,6 +494,7 @@ weather$Date <- mdy(weather$Date)
 
 # Adjusting the Events Variable
 weather$Events <- as.factor(weather$Events)
+
 
 ```
 
@@ -660,33 +571,42 @@ Ok, we’re in good shape. Now to do a few quick visualizations.
 #### Minimum
 
 ```{r}
-weather %>% 
-  group_by(Date,Min_TemperatureF) %>%
-  summarize(N = n()) %>%
-  ggplot(aes(x = Date, y = N)) + 
-  geom_line() + 
-  labs(x = "Date", y = "Minimum Temperature (F)") + 
-  theme_bw() + geom_smooth()
+weather %>%
+  ggplot(aes(Date,Min_TemperatureF)) +
+  geom_line() +
+  theme_bw()  +
+  labs(y="Minimum Temperature (F)")
 ```
 
 #### Mean
 
 ```{r}
-
-
+weather %>%
+  ggplot(aes(x=Date,y=as.numeric(Mean_Temperature_F))) +
+  geom_line() +
+  theme_bw() +
+  labs(y="Mean Temperature (F)")
 ```
+
 
 #### Maximum
 
 ```{r}
-
-
+weather %>%
+  ggplot(aes(Date,Max_Temperature_F)) +
+  geom_line() +
+  theme_bw() +
+  ylab("Maximum Temperature (F)")
 ```
 
 ### Events
 
 ```{r}
-
+weather %>%
+  group_by(Events) %>%
+  ggplot(aes(Events), group=1) +
+    geom_bar() +
+    ylab("Number of Events")
 ```
 ### Combining Weather and Trip Datasets
 
@@ -709,20 +629,35 @@ trip_weather <- left_join(trip_3, weather, by = "Date")
 Ok. Now let’s see how the number of trips per day is influenced by weather (mean temperature, rounded to the nearest 5 degrees F)
 
 ```{r}
-
+trip_weather$Mean_Temperature_F <- as.numeric(trip_weather$Mean_Temperature_F)
+trip_weather %>%
+  mutate(mround = 5*round(Mean_Temperature_F/5)) %>%
+  group_by(mround)%>%
+  summarize(N = n()) %>%
+  ggplot(aes(y=N,x=mround)) +
+  geom_line() +
+  theme_bw() +
+  ylab("Number of Trips") +
+  xlab("Temperature (Rounded to Nearest 5 degrees F)")
 ```
 
 So, as expected, there are more trips when the weather is mild but not too warm (over 70F) or too cold (below 50F). However, this figure may be influenced by the overall number of days that exhibited each mean temperature. Let’s try to standardize that.
 
 ```{r}
-
+trip_weather %>% 
+  mutate(rounded = 5*round(Mean_Temperature_F/5)) %>%
+  group_by(rounded) %>%
+  summarize(n = n(), Days = n_distinct(Date)) %>% 
+  mutate(ratio = n/Days) %>%
+    ggplot(aes(y=ratio,x=rounded)) +
+    geom_line() +
+    theme_bw() +
+    ylab("Number of Trips") +
+    xlab("Temperature (Rounded to Nearest 5 degrees F)")
 ```
 
 So when we standardize our measurements, correcting for the number of days that actually reached each temperature, we see a steady increase in the number of trips until around 75F where the trend levels off. People are more likely to ride a bike when it’s warm outside.
 
-```{r}
-
-```
 
 ### Precipitation vs. Number of Trips
 
@@ -731,7 +666,15 @@ If you’ve ever heard of Seattle, you probably hear that it rains all the time 
 We’ll start with a figure standardized for number of days at a precipitation level, rounded to the nearest 0.2 inches.
 
 ```{r}
-
+trip_weather %>% 
+  mutate(rounded = 0.2*round(Precipitation_In/0.2)) %>%
+  group_by(rounded) %>%
+  summarize(n = n(), Days = n_distinct(Date)) %>% 
+  mutate(Ratio2 = n/Days) %>%
+    ggplot(aes(x = rounded , y = Ratio2)) +
+    geom_line() + 
+    theme_bw() + 
+    labs(x = "Precipitation (Rounded to Nearest 0.2 Inches)", y = "Number of Trips/Number of Days at Precipitaton Level")
 ```
 
 Looks like even Seattleites have a limit when it comes to riding a bike in the rain. The more it rained, the fewer trips were taken per day.
